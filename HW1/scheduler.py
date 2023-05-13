@@ -36,12 +36,14 @@ class Scheduler:
         print()
 
         all_tasks = copy.deepcopy(ready_queue)
-        for current_time in range(1, 200):
+        for current_time in range(1, 100):
+            running = False
             # RUN task
             for task in ready_queue:
                 if task.act_time < current_time and 0 < task.wcet:
                     task.state = 0
                     task.wcet -= 1
+                    running = True
                     print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time-1, '-', current_time)
                     print(Fore.WHITE)
                     if task.wcet == 0:
@@ -70,6 +72,10 @@ class Scheduler:
                     for t in ready_queue:
                         print(t.__dict__)
             
+            if running == False:
+                print(Fore.BLUE + 'FREE TIME!', current_time-1, '-', current_time)
+                print(Fore.WHITE)
+
 
         # print(ready_queue[0].__dict__)
         # print(ready_queue[1].__dict__)
