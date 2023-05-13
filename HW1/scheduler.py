@@ -1,5 +1,8 @@
 from task import * 
 import heapq
+from colorama import Fore, Back, Style
+import copy
+
 class Scheduler:
     """Scheduler Class
     
@@ -21,7 +24,68 @@ class Scheduler:
             
         
     def EDF_preemptive(self):
-        print(self.task_set.tasks[1].name)
+        new_list = sorted(self.task_set.tasks, key=lambda x: x.deadline, reverse=False)
+        ready_queue = [item
+           for item in new_list
+           if item.state == 1]
+        print(ready_queue[0].__dict__)
+        print(ready_queue[1].__dict__)
+        print(ready_queue[2].__dict__)
+        print(ready_queue[3].__dict__)
+        print(ready_queue[4].__dict__)
+        print()
+
+        all_tasks = copy.deepcopy(ready_queue)
+        for current_time in range(1, 200):
+            # RUN task
+            for task in ready_queue:
+                if task.act_time < current_time and 0 < task.wcet:
+                    task.state = 0
+                    task.wcet -= 1
+                    print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time-1, '-', current_time)
+                    print(Fore.WHITE)
+                    if task.wcet == 0:
+                        ready_queue.remove(task)
+                    break
+
+            # add task from period time
+            for task in all_tasks:
+                if task.period != 0 and current_time % task.period == task.act_time and task.period < current_time:
+                    add_task = copy.deepcopy(task)
+                    add_task.act_time = current_time
+                    add_task.deadline += current_time 
+                    ready_queue.append(add_task)
+                    ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
+                    print(Fore.BLUE + 'Add from period time:', current_time, 'task: ', add_task.name)
+                    print(Fore.WHITE)
+                    for t in ready_queue:
+                        print(t.__dict__)
+                        
+            # MISSED tasks
+            for task in ready_queue:
+                if task.deadline <= current_time:
+                    print(Fore.RED + 'MISSED TASK', task.__dict__)
+                    print(Fore.WHITE)
+                    ready_queue.remove(task)
+                    for t in ready_queue:
+                        print(t.__dict__)
+            
+
+        # print(ready_queue[0].__dict__)
+        # print(ready_queue[1].__dict__)
+        # print(ready_queue[2].__dict__)
+        # print(ready_queue[3].__dict__)
+        # print(ready_queue[4].__dict__)
+        # print()
+
+            
+
+
+
+
+
+
+        
 
     def EDF_non_preemptive(self):
         # print(self.task_set.tasks[0].__dict__)
@@ -42,7 +106,7 @@ class Scheduler:
         #    if not item.state == 2]
         
         # new_list = sorted(new_list.tasks, key=lambda x: x.deadline, reverse=True)
-        new_list = sorted(self.task_set.tasks, key=lambda x: x.deadline, reverse=True)
+        new_list = sorted(self.task_set.tasks, key=lambda x: x.deadline, reverse=False)
         ready_queue = [item
            for item in new_list
            if item.state == 1]
@@ -68,64 +132,67 @@ class Scheduler:
         
 
         current_time = 0
-        # ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
-        # while True:
-        # for j in range(len(ready_queue)):
         j = 0
-        # while j <= len(ready_queue):
-        all_tasks = ready_queue
-        while True:
-            print('current_time: ', current_time)
-            # for i in range(len(ready_queue)):
-            #     if current_time == ready_queue[i].period  & ready_queue[i].period != 0:
-            #         print('add from period  time:', current_time, 'task: ', ready_queue[i].__dict__)
-            #         ready_queue.append(ready_queue[i])
-
-            if len(ready_queue) == 0:
-                print('ENd')
-                break
-            
-            ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
-
-            check = False
-            # print(ready_queue[0].__dict__)
-            print()
-            if  ready_queue[0].act_time <= current_time:
-                print('\n\n\n\n\n',"Executing task:", ready_queue[0].__dict__)
-                # current_time += ready_queue[j].wcet
-                new_time = current_time + ready_queue[j].wcet
-                # print(123456789, len(ready_queue))
-
-                print(current_time, new_time)
-                for i in range(len(all_tasks)):
-                    # print(all_tasks[i].__dict__)
-                    if all_tasks[i].period != 0:
-                        # print('hiii')
-                        for k in range(current_time+1, new_time+1):
-                            # print('k: ', k, 'all_tasks[i].period', all_tasks[i].period, 'all_tasks[i].act_time', all_tasks[i].act_time, k % all_tasks[i].period)
-                            # print()
-                            # print(k % all_tasks[i].period == all_tasks[i].act_time, k > all_tasks[i].period)
-                            if k % all_tasks[i].period == all_tasks[i].act_time and k > all_tasks[i].period: 
-                                # print(23456)
-                                # print('k: ', k, 'all_tasks[i].period', all_tasks[i].period, 'all_tasks[i].act_time', all_tasks[i].act_time)
-                                
-                                print('add from period  time:', current_time, 'task: ', all_tasks[i].__dict__ , 'in time ', k)
-                                ready_queue.append(all_tasks[i])
-                # Execute the task
-                current_time = new_time
-                # print("Executing task:", ready_queue[0].__dict__)
-                print('current time ', current_time)
-                ready_queue.pop(0)
-                check = True
-                # break
-                # continue
-                # j += 1,
-            if check == False:
-                current_time += 1
-            
+        all_tasks = copy.copy(ready_queue)
+        while len(ready_queue) > 0:
+            print('\n\n\n\n\ncurrent_time: ', current_time)
+            print('list of current tasks: ')
             for x in ready_queue:
                 print(x.__dict__)
-            # # elif time < new_list[0]
+            ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
+            # if current_time < ready_queue[0].act_time:
+            
+
+
+
+
+            if  ready_queue[0].act_time <= current_time:
+                print(Fore.GREEN + "Executing task:", ready_queue[0].__dict__)
+                print(Fore.WHITE)
+
+                # check current-time + wcet doesnt miss deadline
+                if hasattr(ready_queue[j], 'arrival_time'):
+                    if current_time + ready_queue[j].wcet <= ready_queue[j].deadline + ready_queue[j].arrival_time:
+                        new_time = current_time + ready_queue[j].wcet
+                    else:
+                        new_time = ready_queue[j].deadline
+                else:
+                    if current_time + ready_queue[j].wcet <= ready_queue[j].deadline:
+                        new_time = current_time + ready_queue[j].wcet
+                    else:
+                        new_time = ready_queue[j].deadline
+
+                
+                # add tasks that their period came during act-time present task
+                for i in range(len(all_tasks)):
+                    if all_tasks[i].period != 0:
+                        for k in range(current_time+1, new_time+1):
+                            if k % all_tasks[i].period == all_tasks[i].act_time and k > all_tasks[i].period: 
+                                print(Fore.BLUE + 'add from period time:', current_time, 'task: ', all_tasks[i].__dict__ , 'in time ', k)
+                                print(Fore.WHITE)
+                                add_task = copy.copy(all_tasks[i])
+                                add_task.arrival_time = int(k)
+                                ready_queue.append(add_task)
+                current_time = new_time
+                ready_queue.pop(0)
+
+                # remove missed tasks
+                for task in ready_queue:
+                    if hasattr(task, 'arrival_time'):
+                        if task.arrival_time + task.deadline <= current_time:
+                            print(Fore.RED + 'MISSED TASK', task.__dict__)
+                            print(Fore.WHITE)
+                            ready_queue.remove(task)
+                    else:
+                        if task.deadline <= current_time:
+                            ready_queue.remove(task)
+
+            else:
+                current_time += 1
+            
+            print('list of current tasks: ')
+            for x in ready_queue:
+                print(x.__dict__)
 
             
 
@@ -134,27 +201,46 @@ class Scheduler:
 
         
 
-# check = False
-#             print(234567890, j)
-#             print(ready_queue)
-#             print(ready_queue[j].__dict__)
-#             print()
-#             if  ready_queue[j].act_time <= current_time:
-#                 current_time += ready_queue[j].wcet
-#                 # Execute the task
-#                 print("Executing task:", ready_queue[j].__dict__)
-#                 print('current time ', current_time)
-#                 ready_queue.pop(j)
-#                 check = True
-#                 # break
-#                 # continue
-#                 j += 1
-#             if check == False:
-#                 current_time += 1
+
+
+    def RM(self):
+        new_list = sorted(self.task_set.tasks, key=lambda x: (x.period, x.priority), reverse=False)
+        ready_queue = [item
+           for item in new_list
+           if item.state == 1]
+        
+        print(ready_queue[0].__dict__)
+        print(ready_queue[1].__dict__)
+        print(ready_queue[2].__dict__)
+        print(ready_queue[3].__dict__)
+        print(ready_queue[4].__dict__)
+
+
+        # current_time = 0 
+        # for t in range(100):
+        #     print(Fore.GREEN + "Executing task:", ready_queue[0].__dict__)
+        #     print(Fore.WHITE)
 
 
 
-    # # def RM(self):
+
+        # for task in ready_queue:
+        #     if 
+        #     print(Fore.GREEN + "Executing task:", ready_queue[0].__dict__)
+        #     print(Fore.WHITE)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # def DM(self):
 
@@ -162,55 +248,3 @@ class Scheduler:
 
 
 
-
-
-#  while True:
-#             print('current_time: ', current_time)
-#             # for i in range(len(ready_queue)):
-#             #     if current_time == ready_queue[i].period  & ready_queue[i].period != 0:
-#             #         print('add from period  time:', current_time, 'task: ', ready_queue[i].__dict__)
-#             #         ready_queue.append(ready_queue[i])
-
-#             if len(ready_queue) == 0:
-#                 print('ENd')
-#                 break
-            
-#             ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
-
-#             check = False
-#             # print(ready_queue[0].__dict__)
-#             print()
-#             if  ready_queue[0].act_time <= current_time:
-#                 print('\n\n\n\n\n',"Executing task:", ready_queue[0].__dict__)
-#                 # current_time += ready_queue[j].wcet
-#                 new_time = current_time + ready_queue[j].wcet
-#                 # print(123456789, len(ready_queue))
-
-#                 print(current_time, new_time)
-#                 for i in range(len(ready_queue)):
-#                     print(ready_queue[i].__dict__)
-#                     if ready_queue[i].period != 0:
-#                         print('hiii')
-#                         for k in range(current_time+1, new_time+1):
-#                             print('k: ', k, 'ready_queue[i].period', ready_queue[i].period, 'ready_queue[i].act_time', ready_queue[i].act_time)
-#                             # print()
-#                             if k % ready_queue[i].period == ready_queue[i].act_time & k > ready_queue[i].period: 
-#                                 print('k: ', k, 'ready_queue[i].period', ready_queue[i].period, 'ready_queue[i].act_time', ready_queue[i].act_time)
-                                
-#                                 print('add from period  time:', current_time, 'task: ', ready_queue[i].__dict__)
-#                                 ready_queue.append(ready_queue[i])
-#                 # Execute the task
-#                 current_time = new_time
-#                 # print("Executing task:", ready_queue[0].__dict__)
-#                 print('current time ', current_time)
-#                 ready_queue.pop(0)
-#                 check = True
-#                 # break
-#                 # continue
-#                 # j += 1,
-#             if check == False:
-#                 current_time += 1
-            
-
-#             # # elif time < new_list[0]
-    
