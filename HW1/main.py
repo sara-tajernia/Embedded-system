@@ -5,8 +5,8 @@ from scheduler import Scheduler
 
 if __name__ == '__main__':
     # task_set = read_tasks_from_csv('tasks1.csv')
-    task_set = TaskSet('tasks2.csv')
-    # print(task_set.tasks[0].name)
+    # task_set = TaskSet('tasks1.csv')
+    task_set = TaskSet('tasks_interrupts.csv')
     Scheduler(task_set, 'EDF_preemptive')
     # Scheduler(task_set, 'RM')
     # Scheduler(task_set, 'EDF_non_preemptive')
