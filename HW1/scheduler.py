@@ -31,21 +31,14 @@ class Scheduler:
         task.state = 0
         task.wcet -= 1
         free = False
-        # if task.state == 0:
-        #     interrupt = True
-        # else:
-        #     interrupt = False
         print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time, '-', current_time+1)
         print(Fore.WHITE)
         if task.wcet == 0:
+            print('hiiiiiiiiiiiiii', task.__dict__)
             ready_queue.remove(task)
         return task, ready_queue, free
         
     
-
-
-
-
 
     def EDF_preemptive(self):
         new_list = sorted(self.task_set.tasks, key=lambda x: x.deadline, reverse=False)
@@ -53,12 +46,9 @@ class Scheduler:
            for item in new_list
            if item.state == 1]
         
-        interrupts = []
         # Relative to absoulute deadline & interrupt list
         for task in ready_queue:
             task.deadline += task.act_time
-            # if task.type == 0:
-            #     interrupts.append(task)
 
         print(ready_queue[0].__dict__)
         print(ready_queue[1].__dict__)
@@ -85,37 +75,18 @@ class Scheduler:
                     for t in ready_queue:
                         print(t.__dict__)
 
-
-            # RUN tasks
             # Check if task interrupt arrives
             for task in ready_queue:
                 if task.type == 0 and task.act_time <= current_time:
-                    # task.state = 0
-                    # task.wcet -= 1
-                    # free = False
                     interrupt = True
-                    # print(Fore.GREEN + "Executing task interrupt:", task.name, '      time: ', current_time, '-', current_time+1)
-                    # print(Fore.WHITE)
-                    # if task.wcet == 0:
-                    #     ready_queue.remove(task)
-                    # break
                     task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                     break
-
+            # RUN task
             if interrupt == False:
                 for task in ready_queue:
                     if task.act_time <= current_time:
-                    #     task.state = 0
-                    #     task.wcet -= 1
-                    #     free = False
-                    #     print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time, '-', current_time+1)
-                    #     print(Fore.WHITE)
-                    #     if task.wcet == 0:
-                    #         ready_queue.remove(task)
                         task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                         break
-
-
            
             # MISSED tasks
             for task in ready_queue:
@@ -126,6 +97,7 @@ class Scheduler:
                     for t in ready_queue:
                         print(t.__dict__)
             
+            # When CPU is FREE and we dont have and ready task
             if free == True:
                 print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
                 print(Fore.WHITE)
@@ -165,6 +137,11 @@ class Scheduler:
         ready_queue = [item
            for item in new_list
            if item.state == 1]
+        
+        # Relative to absoulute deadline & interrupt list
+        for task in ready_queue:
+            task.deadline += task.act_time
+
         print(ready_queue[0].__dict__)
         print(ready_queue[1].__dict__)
         print(ready_queue[2].__dict__)
@@ -172,61 +149,164 @@ class Scheduler:
         print(ready_queue[4].__dict__)
         print()
 
-        all_tasks = copy.deepcopy(ready_queue)
         running_queue = []
-        for current_time in range(1, 100):
+        all_tasks = copy.deepcopy(ready_queue)
+        for current_time in range(0, 100):
             free = True
-            # RUN task
-            if running_queue:
-                print('old task', running_queue[0].name)
-                running_queue[0].wcet -= 1
-                print(Fore.GREEN + "Executing running task:", running_queue[0].name, '      time: ', current_time-1, '-', current_time)
-                print(Fore.WHITE)
-                free = False
-                if running_queue[0].wcet == 0:
-                    ready_queue.remove(running_queue[0])
-                    running_queue.pop(0)
-            else:
-                print('new task')
-                for task in ready_queue:
-                    if  task.act_time < current_time and 0 < task.wcet:
-                        for t in ready_queue:
-                            print(t.__dict__)
-                        task.state = 0
-                        task.wcet -= 1
-                        free = False
-                        running_queue.append(task)
-                        print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time-1, '-', current_time)
-                        print(Fore.WHITE)
-                        if task.wcet == 0:
-                            ready_queue.remove(task)
-                        break
-
+            interrupt = False
             # Add task from period time
             for task in all_tasks:
                 if task.period != 0 and current_time % task.period == task.act_time and task.period < current_time:
                     add_task = copy.deepcopy(task)
+                    add_task.deadline = add_task.deadline - add_task.act_time + current_time 
                     add_task.act_time = current_time
-                    add_task.deadline += current_time 
                     ready_queue.append(add_task)
                     ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
                     print(Fore.BLUE + 'Add from period time:', current_time, 'task: ', add_task.name)
                     print(Fore.WHITE)
                     for t in ready_queue:
                         print(t.__dict__)
-                        
+
+            # For Non-preeptive run the same task
+            if running_queue:
+                print('old task', running_queue[0].name)
+                # # print('old task', running_queue[0].name)
+                # running_queue[0].wcet -= 1
+                # print(Fore.GREEN + "Executing running task:", running_queue[0].name, '      time: ', current_time, '-', current_time+1)
+                # print(Fore.WHITE)
+                # free = False
+                # if running_queue[0].wcet == 0:
+                #     ready_queue.remove(running_queue[0])
+                #     running_queue.pop(0)
+                # print('running_queue[0]', running_queue[0].__dict__)
+                running_queue[0], ready_queue, free = self.execute_task(running_queue[0], current_time, ready_queue)
+                if running_queue[0].wcet == 0:
+                    running_queue.pop(0)
+
+                # task.state = 0
+                # task.wcet -= 1
+                # free = False
+                # print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time, '-', current_time+1)
+                # print(Fore.WHITE)
+                # if task.wcet == 0:
+                #     ready_queue.remove(task)
+                # return task, ready_queue, free
+
+
+            else:
+                print('new task', len(ready_queue))
+                for t in ready_queue:
+                    print(t.__dict__)
+                # Check if task interrupt arrives
+                for task in ready_queue:
+                    if task.type == 0 and task.act_time <= current_time:
+                        interrupt = True
+                        task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
+                        running_queue.append(task)
+                        break
+                # RUN task
+                if interrupt == False:
+                    for task in ready_queue:
+                        if task.act_time <= current_time:
+                            task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
+                            running_queue.append(task)
+                            break
+                
             # MISSED tasks
             for task in ready_queue:
                 if task.deadline <= current_time:
                     print(Fore.RED + 'MISSED TASK', task.__dict__)
                     print(Fore.WHITE)
+                    # print('\n\n\n\n', 'missing task: ', task.__dict__)
                     ready_queue.remove(task)
+                    if task in running_queue:
+                        running_queue.remove(task)
+                    # print('remaining task: ')
                     for t in ready_queue:
                         print(t.__dict__)
+                    # ready_queue.remove(task)
             
+            # When CPU is FREE and we dont have and ready task
             if free == True:
-                print(Fore.BLUE + 'FREE TIME!', current_time-1, '-', current_time)
+                print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
                 print(Fore.WHITE)
+
+
+
+
+
+
+
+
+
+
+
+        # new_list = sorted(self.task_set.tasks, key=lambda x: x.deadline, reverse=False)
+        # ready_queue = [item
+        #    for item in new_list
+        #    if item.state == 1]
+        # print(ready_queue[0].__dict__)
+        # print(ready_queue[1].__dict__)
+        # print(ready_queue[2].__dict__)
+        # print(ready_queue[3].__dict__)
+        # print(ready_queue[4].__dict__)
+        # print()
+
+        # all_tasks = copy.deepcopy(ready_queue)
+        # running_queue = []
+        # for current_time in range(1, 100):
+        #     free = True
+        #     # RUN task
+        #     if running_queue:
+        #         print('old task', running_queue[0].name)
+        #         running_queue[0].wcet -= 1
+        #         print(Fore.GREEN + "Executing running task:", running_queue[0].name, '      time: ', current_time-1, '-', current_time)
+        #         print(Fore.WHITE)
+        #         free = False
+        #         if running_queue[0].wcet == 0:
+        #             ready_queue.remove(running_queue[0])
+        #             running_queue.pop(0)
+        #     else:
+        #         print('new task')
+        #         for task in ready_queue:
+        #             if  task.act_time < current_time and 0 < task.wcet:
+        #                 for t in ready_queue:
+        #                     print(t.__dict__)
+        #                 task.state = 0
+        #                 task.wcet -= 1
+        #                 free = False
+        #                 running_queue.append(task)
+        #                 print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time-1, '-', current_time)
+        #                 print(Fore.WHITE)
+        #                 if task.wcet == 0:
+        #                     ready_queue.remove(task)
+        #                 break
+
+        #     # Add task from period time
+        #     for task in all_tasks:
+        #         if task.period != 0 and current_time % task.period == task.act_time and task.period < current_time:
+        #             add_task = copy.deepcopy(task)
+        #             add_task.act_time = current_time
+        #             add_task.deadline += current_time 
+        #             ready_queue.append(add_task)
+        #             ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
+        #             print(Fore.BLUE + 'Add from period time:', current_time, 'task: ', add_task.name)
+        #             print(Fore.WHITE)
+        #             for t in ready_queue:
+        #                 print(t.__dict__)
+                        
+        #     # MISSED tasks
+        #     for task in ready_queue:
+        #         if task.deadline <= current_time:
+        #             print(Fore.RED + 'MISSED TASK', task.__dict__)
+        #             print(Fore.WHITE)
+        #             ready_queue.remove(task)
+        #             for t in ready_queue:
+        #                 print(t.__dict__)
+            
+        #     if free == True:
+        #         print(Fore.BLUE + 'FREE TIME!', current_time-1, '-', current_time)
+        #         print(Fore.WHITE)
 
 
 
