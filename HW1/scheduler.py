@@ -16,7 +16,9 @@ class Scheduler:
         self.task_set = task_set
         self.algorithm = algorithm
         self.time = {}
-        self.raise_task = {}
+        # self.raise_task = {}
+        # [task.name, act_time, deadline]
+        # self.raise_task = []
         self.miss_task = {}
         if self.algorithm == "EDF_preemptive":
             self.EDF_preemptive()
@@ -38,25 +40,32 @@ class Scheduler:
         x = list(self.time.keys())
         y = list(self.time.values())
 
-        print('\nraise task: ', self.raise_task)
-        print('\nmiss task: ', self.miss_task)
+        # print('\nraise task: ', self.raise_task)
+        # print('\nmiss task: ', self.miss_task)
 
-        plt.annotate(
-            '',
-            xy=(3, 3),  # coordinates of the arrow tip
-            xytext=(3, 2),  # coordinates of the text
-            arrowprops=dict(arrowstyle='->')
-        )
+        # for s in self.raise_task:
+                
+        # plt.annotate(
+        #     '',
+        #     xy=(3, 4),  # coordinates of the arrow tip
+        #     xytext=(3, 3),  # coordinates of the text
+        #     arrowprops=dict(arrowstyle='->')
+        # )
         plt.scatter(x, y)
         
-        plt.show()
+        # plt.show()
+
+        # time_table = {}
+        # for t in self.time:
+        #     if self.time[t] not in time_table:
+        #         time_table[]
 
     def execute_task(self, task, current_time, ready_queue):
         task.state = 0
         task.wcet -= 1
         free = False
-        print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time, '-', current_time+1)
-        print(Fore.WHITE)
+        # print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time, '-', current_time+1)
+        # print(Fore.WHITE)
         self.time[current_time] = task.name
         if task.wcet == 0:
             ready_queue.remove(task)
@@ -71,6 +80,8 @@ class Scheduler:
         # Relative to absoulute deadline & interrupt list
         for task in ready_queue:
             task.deadline += task.act_time
+            # self.raise_task.append([task.name, task.act_time, task.deadline])
+
 
         
         ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
@@ -92,11 +103,12 @@ class Scheduler:
                     add_task.act_time = current_time
                     ready_queue.append(add_task)
                     ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
-                    print(Fore.BLUE + 'Add from period time:', current_time, 'task: ', add_task.name)
+                    print(Fore.BLUE + f'Add {add_task.name} from period in time {current_time}')
                     print(Fore.WHITE)
-                    self.raise_task[current_time] = task.name
-                    for t in ready_queue:
-                        print(t.__dict__)
+                    # self.raise_task.append([task.name, add_task.act_time, add_task.deadline])
+
+                    # for t in ready_queue:
+                    #     print(t.__dict__)
 
 
              # MISSED tasks
@@ -105,8 +117,8 @@ class Scheduler:
                     print(Fore.RED + 'MISSED TASK', task.__dict__)
                     print(Fore.WHITE)
                     ready_queue.remove(task)
-                    for t in ready_queue:
-                        print(t.__dict__)
+                    # for t in ready_queue:
+                    #     print(t.__dict__)
                     self.miss_task[current_time] = task.name
                     
 
@@ -125,10 +137,10 @@ class Scheduler:
                         task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                         break
            
-            # When CPU is FREE and we dont have and ready task
-            if free == True:
-                print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
-                print(Fore.WHITE)
+            # # When CPU is FREE and we dont have and ready task
+            # if free == True:
+            #     print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
+            #     print(Fore.WHITE)
                 # self.time[current_time] = 'Free'
 
         # print('hiiiii', self.time)
