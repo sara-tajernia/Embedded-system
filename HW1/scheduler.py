@@ -16,10 +16,8 @@ class Scheduler:
         self.task_set = task_set
         self.algorithm = algorithm
         self.time = {}
-        # self.raise_task = {}
-        # [task.name, act_time, deadline]
-        # self.raise_task = []
-        self.miss_task = {}
+        self.miss_task = 0
+        self.free_time = 0
         if self.algorithm == "EDF_preemptive":
             self.EDF_preemptive()
         elif self.algorithm == "EDF_non_preemptive":
@@ -28,44 +26,34 @@ class Scheduler:
             self.RM()
         if self.algorithm == "DM":
             self.DM()
-        self.plot()
+        self.printer()
         
 
-    def plot(self):
-        print(self.time)
-        # time_dict = vars(self.time)['time']
-        # print('\n', time_dict)
-        # # ys = []
-        # # colors = ['red', 'blue', 'green', 'purple', 'orange']  
+    def printer(self):
+        print('number of missing tasks: ', self.miss_task)
+        if self.miss_task != 0:
+            print('NOT FEASIBLE!')
+        else:
+            print('FEASIBLE!')
+
+        print('Utility: ', 1- self.free_time/100)
+
         x = list(self.time.keys())
         y = list(self.time.values())
-
-        # print('\nraise task: ', self.raise_task)
-        # print('\nmiss task: ', self.miss_task)
-
-        # for s in self.raise_task:
-                
-        # plt.annotate(
-        #     '',
-        #     xy=(3, 4),  # coordinates of the arrow tip
-        #     xytext=(3, 3),  # coordinates of the text
-        #     arrowprops=dict(arrowstyle='->')
-        # )
         plt.scatter(x, y)
+        plt.title(self.algorithm)
+        plt.show()
         
-        # plt.show()
-
-        # time_table = {}
-        # for t in self.time:
-        #     if self.time[t] not in time_table:
-        #         time_table[]
+    def print_tasks(self, ready_queue):
+        print('list tasks: ')
+        for t in ready_queue:
+            print(t.__dict__)
+        print()
 
     def execute_task(self, task, current_time, ready_queue):
         task.state = 0
         task.wcet -= 1
         free = False
-        # print(Fore.GREEN + "Executing task:", task.name, '      time: ', current_time, '-', current_time+1)
-        # print(Fore.WHITE)
         self.time[current_time] = task.name
         if task.wcet == 0:
             ready_queue.remove(task)
@@ -80,16 +68,11 @@ class Scheduler:
         # Relative to absoulute deadline & interrupt list
         for task in ready_queue:
             task.deadline += task.act_time
-            # self.raise_task.append([task.name, task.act_time, task.deadline])
 
-
-        
         ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
 
-        for t in ready_queue:
-            print(t.__dict__)
-        print()
-
+        self.print_tasks(ready_queue)
+        
         all_tasks = copy.deepcopy(ready_queue)
         for current_time in range(0, 100):
             free = True
@@ -103,25 +86,17 @@ class Scheduler:
                     add_task.act_time = current_time
                     ready_queue.append(add_task)
                     ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
-                    print(Fore.BLUE + f'Add {add_task.name} from period in time {current_time}')
+                    print(Fore.BLUE + f'ADD {add_task.name} from period in time {current_time}')
                     print(Fore.WHITE)
-                    # self.raise_task.append([task.name, add_task.act_time, add_task.deadline])
-
-                    # for t in ready_queue:
-                    #     print(t.__dict__)
-
 
              # MISSED tasks
             for task in ready_queue:
                 if task.deadline <= current_time:
-                    print(Fore.RED + 'MISSED TASK', task.__dict__)
+                    print(Fore.RED + f'MISSED {task.name} in time {current_time}')
                     print(Fore.WHITE)
                     ready_queue.remove(task)
-                    # for t in ready_queue:
-                    #     print(t.__dict__)
-                    self.miss_task[current_time] = task.name
-                    
-
+                    # self.miss_task[current_time] = task.name
+                    self.miss_task += 1
 
             # Check if task interrupt arrives
             for task in ready_queue:
@@ -136,15 +111,13 @@ class Scheduler:
                     if task.act_time <= current_time:
                         task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                         break
-           
-            # # When CPU is FREE and we dont have and ready task
-            # if free == True:
-            #     print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
-            #     print(Fore.WHITE)
-                # self.time[current_time] = 'Free'
 
-        # print('hiiiii', self.time)
-        # return self.time, self.raise_task, self.miss_task
+            # When CPU is FREE and we dont have and ready task
+            if free == True:
+                print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
+                print(Fore.WHITE)
+                self.free_time += 1
+                # self.time[current_time] = 'Free'
 
 
 
@@ -156,13 +129,11 @@ class Scheduler:
         # Relative to absoulute deadline & interrupt list
         for task in ready_queue:
             task.deadline += task.act_time
+            # if task.pe
+            # self.utility.append(task.wcet/task.period)
 
-        
         ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
-
-        for t in ready_queue:
-            print(t.__dict__)
-        print()
+        self.print_tasks(ready_queue)
 
         running_queue = []
         all_tasks = copy.deepcopy(ready_queue)
@@ -177,61 +148,43 @@ class Scheduler:
                     add_task.act_time = current_time
                     ready_queue.append(add_task)
                     ready_queue = sorted(ready_queue, key=lambda x: x.deadline, reverse=False)
-                    print(Fore.BLUE + 'Add from period time:', current_time, 'task: ', add_task.name)
+                    print(Fore.BLUE + f'ADD {add_task.name} from period in time {current_time}')
                     print(Fore.WHITE)
-                    for t in ready_queue:
-                        print(t.__dict__)
 
             # MISSED tasks
             for task in ready_queue:
                 if task.deadline <= current_time:
-                    print(Fore.RED + 'MISSED TASK', task.__dict__)
+                    print(Fore.RED + f'MISSED {task.name} in time {current_time}')
                     print(Fore.WHITE)
                     ready_queue.remove(task)
+                    self.miss_task += 1
                     if task in running_queue:
                         running_queue.remove(task)
-                    for t in ready_queue:
-                        print(t.__dict__)
-
 
             # For Non-preeptive run the same task
             if running_queue:
-                print('old task',)
-                running_queue[0], ready_queue, free = self.execute_task(running_queue[0], current_time, ready_queue)
+                running_queue[0], ready_queue = self.execute_task(running_queue[0], current_time, ready_queue)
                 if running_queue[0].wcet == 0:
                     running_queue.pop(0)
-
-
             else:
-                print('new task',)
                 # Check if task interrupt arrives
                 for task in ready_queue:
                     if task.type == 0 and task.act_time <= current_time:
                         interrupt = True
-                        task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
+                        task, ready_queue = self.execute_task(task, current_time, ready_queue)
                         running_queue.append(task)
                         break
+
                 # RUN task
                 if interrupt == False:
                     for task in ready_queue:
                         if task.act_time <= current_time:
-                            task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
+                            task, ready_queue = self.execute_task(task, current_time, ready_queue)
                             running_queue.append(task)
                             break
                 
-                        
-            # When CPU is FREE and we dont have and ready task
-            if free == True:
-                print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
-                print(Fore.WHITE)
-
-        
-
-
 
     def RM(self):
-        # new_list = sorted(self.task_set.tasks, key=lambda x: x.period, reverse=False)
-        # new_list = list(self)
         periodic_queue = [item
            for item in list(self.task_set.tasks)
            if item.state == 1 and item.type == 1]
@@ -250,7 +203,6 @@ class Scheduler:
         periodic_queue = sorted(periodic_queue, key=lambda x: x.period, reverse=False)
         aperiodic_queue = sorted(aperiodic_queue, key=lambda x: x.priority, reverse=False)
         
-
         print('periodic_queue: ')
         for t in periodic_queue:
             print(t.__dict__)
@@ -274,20 +226,15 @@ class Scheduler:
                     add_task.act_time = current_time
                     periodic_queue.append(add_task)
                     periodic_queue = sorted(periodic_queue, key=lambda x: x.deadline, reverse=False)
-                    print(Fore.BLUE + 'Add from period time:', current_time, 'task: ', add_task.name)
+                    print(Fore.BLUE + f'ADD {add_task.name} from period in time {current_time}')
                     print(Fore.WHITE)
-                    for t in periodic_queue:
-                        print(t.__dict__)
-
 
             # MISSED tasks from periodic queue
             for task in periodic_queue:
                 if task.deadline <= current_time:
-                    print(Fore.RED + 'MISSED TASK', task.__dict__)
+                    print(Fore.RED + f'MISSED {task.name} in time {current_time}')
                     print(Fore.WHITE)
                     periodic_queue.remove(task)
-                    for t in periodic_queue:
-                        print(t.__dict__)
 
             # MISSED tasks from aperiodic queue
             for task in aperiodic_queue:
@@ -295,15 +242,12 @@ class Scheduler:
                     print(Fore.RED + 'MISSED TASK', task.__dict__)
                     print(Fore.WHITE)
                     aperiodic_queue.remove(task)
-                    for t in aperiodic_queue:
-                        print(t.__dict__)
-
 
             # Check if task interrupt arrives (always aperiodic)
             for task in aperiodic_queue:
                 if task.type == 0 and task.act_time <= current_time:
                     interrupt = True
-                    task, aperiodic_queue, free = self.execute_task(task, current_time, aperiodic_queue)
+                    task, aperiodic_queue = self.execute_task(task, current_time, aperiodic_queue)
                     break
             # RUN task
             if interrupt == False:
@@ -311,42 +255,24 @@ class Scheduler:
                 for task in periodic_queue:
                     if task.act_time <= current_time:
                         periodic_priority = task
-                        # task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                         break
                 for task in aperiodic_queue:
                     if task.act_time <= current_time:
                         aperiodic_priority = task
-                        # task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                         break
                 if periodic_priority != '' and aperiodic_priority != '':
                     if periodic_priority.priority < aperiodic_priority.priority:
-                        # print('periodic_priority', periodic_priority.__dict__)
-                        periodic_priority, periodic_queue, free = self.execute_task(periodic_priority, current_time, periodic_queue)
+                        periodic_priority, periodic_queue = self.execute_task(periodic_priority, current_time, periodic_queue)
                     else:
-                        # print('aperiodic_priority', aperiodic_priority.__dict__)
-                        aperiodic_priority, aperiodic_queue, free = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
+                        aperiodic_priority, aperiodic_queue = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
                 else:
                     if periodic_priority != '':
-                        # print('periodic_priority', periodic_priority.__dict__)
-                        periodic_priority, periodic_queue, free = self.execute_task(periodic_priority, current_time, periodic_queue)
+                        periodic_priority, periodic_queue = self.execute_task(periodic_priority, current_time, periodic_queue)
                     elif aperiodic_priority != '':
-                        # print('aperiodic_priority', aperiodic_priority.__dict__)
-                        aperiodic_priority, aperiodic_queue, free = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
-                   
-
-            # When CPU is FREE and we dont have and ready task
-            if free == True:
-                print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
-                print(Fore.WHITE)
-
-
-
-
-
+                        aperiodic_priority, aperiodic_queue = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
+                
 
     def DM(self):
-               # new_list = sorted(self.task_set.tasks, key=lambda x: x.period, reverse=False)
-        # new_list = list(self)
         periodic_queue = [item
            for item in list(self.task_set.tasks)
            if item.state == 1 and item.type == 1]
@@ -378,7 +304,6 @@ class Scheduler:
 
         all_periodic_tasks = copy.deepcopy(periodic_queue)
         for current_time in range(0, 100):
-            free = True
             interrupt = False
 
             # Add task from period time
@@ -389,20 +314,15 @@ class Scheduler:
                     add_task.act_time = current_time
                     periodic_queue.append(add_task)
                     periodic_queue = sorted(periodic_queue, key=lambda x: x.deadline, reverse=False)
-                    print(Fore.BLUE + 'Add from period time:', current_time, 'task: ', add_task.name)
+                    print(Fore.BLUE + f'ADD {add_task.name} from period in time {current_time}')
                     print(Fore.WHITE)
-                    for t in periodic_queue:
-                        print(t.__dict__)
-
 
             # MISSED tasks from periodic queue
             for task in periodic_queue:
                 if task.deadline <= current_time:
-                    print(Fore.RED + 'MISSED TASK', task.__dict__)
+                    print(Fore.RED + f'MISSED {task.name} in time {current_time}')
                     print(Fore.WHITE)
                     periodic_queue.remove(task)
-                    for t in periodic_queue:
-                        print(t.__dict__)
 
             # MISSED tasks from aperiodic queue
             for task in aperiodic_queue:
@@ -410,15 +330,12 @@ class Scheduler:
                     print(Fore.RED + 'MISSED TASK', task.__dict__)
                     print(Fore.WHITE)
                     aperiodic_queue.remove(task)
-                    for t in aperiodic_queue:
-                        print(t.__dict__)
-
 
             # Check if task interrupt arrives (always aperiodic)
             for task in aperiodic_queue:
                 if task.type == 0 and task.act_time <= current_time:
                     interrupt = True
-                    task, aperiodic_queue, free = self.execute_task(task, current_time, aperiodic_queue)
+                    task, aperiodic_queue = self.execute_task(task, current_time, aperiodic_queue)
                     break
             # RUN task
             if interrupt == False:
@@ -426,35 +343,19 @@ class Scheduler:
                 for task in periodic_queue:
                     if task.act_time <= current_time:
                         periodic_priority = task
-                        # task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                         break
                 for task in aperiodic_queue:
                     if task.act_time <= current_time:
                         aperiodic_priority = task
-                        # task, ready_queue, free = self.execute_task(task, current_time, ready_queue)
                         break
                 if periodic_priority != '' and aperiodic_priority != '':
                     if periodic_priority.priority < aperiodic_priority.priority:
-                        # print('periodic_priority', periodic_priority.__dict__)
-                        periodic_priority, periodic_queue, free = self.execute_task(periodic_priority, current_time, periodic_queue)
+                        periodic_priority, periodic_queue = self.execute_task(periodic_priority, current_time, periodic_queue)
                     else:
-                        # print('aperiodic_priority', aperiodic_priority.__dict__)
-                        aperiodic_priority, aperiodic_queue, free = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
+                        aperiodic_priority, aperiodic_queue = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
                 else:
                     if periodic_priority != '':
-                        # print('periodic_priority', periodic_priority.__dict__)
-                        periodic_priority, periodic_queue, free = self.execute_task(periodic_priority, current_time, periodic_queue)
+                        periodic_priority, periodic_queue = self.execute_task(periodic_priority, current_time, periodic_queue)
                     elif aperiodic_priority != '':
-                        # print('aperiodic_priority', aperiodic_priority.__dict__)
-                        aperiodic_priority, aperiodic_queue, free = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
+                        aperiodic_priority, aperiodic_queue = self.execute_task(aperiodic_priority, current_time, aperiodic_queue)
                    
-
-            # When CPU is FREE and we dont have and ready task
-            if free == True:
-                print(Fore.BLUE + 'FREE TIME!', current_time, '-', current_time+1)
-                print(Fore.WHITE)
-
-
-
-
-
