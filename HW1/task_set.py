@@ -11,9 +11,6 @@ class TaskSet:
     """
     def __init__(self, filename):
         self.tasks = self.read_tasks_from_csv(filename)
-        self.utility = 0
-        self.feasible = False
-        
 
     def read_tasks_from_csv(self, filename):
         with open(filename, 'r') as csvfile:
@@ -33,8 +30,6 @@ class TaskSet:
                         deadline=int(deadline)
                     )
                     task_set.append(task)
-                    # self.tasks.appen
-        # print(task_set[2].name)
-        # self
         return task_set
+    
 
