@@ -31,7 +31,5 @@ class Task (object):
         self.period = period
         self.wcet = wcet
         self.deadline = deadline
-
-        # you can add more attributes if you need
         
   

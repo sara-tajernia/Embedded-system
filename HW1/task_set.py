@@ -13,7 +13,6 @@ class TaskSet:
         self.tasks = self.read_tasks_from_csv(filename)
         self.utility = 0
         self.feasible = False
-        # print(self.tasks)
         
 
     def read_tasks_from_csv(self, filename):
